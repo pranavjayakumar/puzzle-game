@@ -3,23 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#E6DDC8">
+<meta name="theme-color" content="#F1EDCB">
 <title>Front Page Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#E6DDC8; --bg-edge:#D8CDB4; --cell:#D9CEB6;
-  --ink:#5A5146; --ink-soft:#9A8F7E;
-  --cream:#F6F0E0; --cream-edge:#D3C7AC;
-  --dark:#5E5346; --dark-edge:#3A3028;
-  --piece-edge:#3E3329;
+  /* palette: dark green #0A3323 · moss #839958 · beige #F7F4D5 · rosy brown #D3968C · midnight green #105666 */
+  --bg:#F1EDCB; --bg-edge:#DEDDB2; --cell:#E2E0B8;
+  --ink:#0A3323; --ink-soft:#6E8247;
+  --cream:#FBF9E6; --cream-edge:#C7CC9C;
+  --dark:#105666; --dark-edge:#0A3323;
+  --piece-edge:#0A3323;
+  --rose:#D3968C; --moss:#839958;
+  --shade:10,51,35;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
 body{
-  background:radial-gradient(ellipse 120% 90% at 50% 45%, #E9E1CD 55%, var(--bg-edge) 100%) fixed, var(--bg);
+  background:radial-gradient(ellipse 120% 90% at 50% 45%, #F7F4D5 55%, var(--bg-edge) 100%) fixed, var(--bg);
   color:var(--ink);font-family:Oswald,"Arial Narrow",Impact,sans-serif;
   overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
@@ -30,35 +33,36 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .top{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
 .label{font-weight:600;font-size:20px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
 .pill{min-width:150px;padding:6px 26px 5px;text-align:center;background:var(--cream);border-radius:12px;
-  box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(70,50,20,.10);
+  box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);
   font-weight:700;font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums;transition:transform .2s}
 .pill.tick{animation:tick .25s ease-out}
 @keyframes tick{50%{transform:scale(1.04)}}
 .sq{position:absolute;right:0;top:0;width:52px;height:52px;border-radius:12px;background:var(--cream);
-  box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(70,50,20,.10);display:grid;place-items:center;
+  box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);display:grid;place-items:center;
   font-weight:700;font-size:26px;transition:transform .08s,box-shadow .08s}
-.press:active,.press.down{transform:translateY(4px)!important;box-shadow:0 1px 0 var(--cream-edge),0 3px 6px rgba(70,50,20,.10)!important}
+.press:active,.press.down{transform:translateY(4px)!important;box-shadow:0 1px 0 var(--cream-edge),0 3px 6px rgba(var(--shade),.10)!important}
 
 /* ---------- board ---------- */
 .stage{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
 .board{position:relative;touch-action:none}
 .slot{position:absolute;border-radius:var(--sr);background:var(--cell);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.25)}
+.kilim{position:absolute;inset:0;pointer-events:none;opacity:.16;background-image:var(--kilim);background-size:var(--kt) var(--kt);background-position:center}
 .whole{position:absolute;border-radius:var(--pr);background-size:cover;
-  filter:drop-shadow(0 5px 0 var(--piece-edge)) drop-shadow(0 12px 14px rgba(60,40,20,.22));
+  filter:drop-shadow(0 5px 0 var(--piece-edge)) drop-shadow(0 12px 14px rgba(var(--shade),.22));
   transition:opacity .25s}
 .whole.idle{animation:breathe 3.2s ease-in-out infinite}
 @keyframes breathe{50%{transform:translateY(-4px)}}
 .piece{position:absolute;left:0;top:0;will-change:transform;
-  filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 7px 8px rgba(60,40,20,.18));
+  filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 7px 8px rgba(var(--shade),.18));
   transition:filter .15s}
 .piece .c{position:absolute;background-repeat:no-repeat}
-.piece.lift{filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 0 0 #fff) drop-shadow(0 18px 18px rgba(60,40,20,.32));cursor:grabbing}
+.piece.lift{filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 0 0 #fff) drop-shadow(0 18px 18px rgba(var(--shade),.32));cursor:grabbing}
 .piece.lift .inner{transform:scale(1.06) rotate(-1deg)}
 .piece .inner{position:relative;transition:transform .14s cubic-bezier(.3,1.6,.5,1);transform-origin:var(--ox) var(--oy)}
 .piece.joined .inner{animation:joined .38s ease-out}
 @keyframes joined{0%{transform:scale(1)}40%{transform:scale(1.05)}100%{transform:scale(1)}}
-.piece.done{filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 7px 8px rgba(60,40,20,.18))}
+.piece.done{filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 7px 8px rgba(var(--shade),.18))}
 .spark{position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;pointer-events:none;z-index:999;
   animation:spark .55s ease-out forwards}
 @keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
@@ -73,17 +77,17 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .sub{font-weight:500;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);text-align:center}
 .sub b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 .btn-dark{min-width:190px;height:64px;padding:0 34px;border-radius:14px;background:var(--dark);color:#fff;
-  box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(40,25,10,.22);font-weight:700;font-size:28px;letter-spacing:.04em;
+  box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(var(--shade),.22);font-weight:700;font-size:28px;letter-spacing:.04em;
   display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform .08s,box-shadow .08s,opacity .25s}
-.btn-dark:active,.btn-dark.down{transform:translateY(6px);box-shadow:0 1px 0 var(--dark-edge),0 4px 8px rgba(40,25,10,.2)}
+.btn-dark:active,.btn-dark.down{transform:translateY(6px);box-shadow:0 1px 0 var(--dark-edge),0 4px 8px rgba(var(--shade),.2)}
 .btn-dark svg{width:30px;height:30px}
-.btn-cream{height:48px;padding:0 22px;border-radius:12px;background:var(--cream);box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(70,50,20,.10);
+.btn-cream{height:48px;padding:0 22px;border-radius:12px;background:var(--cream);box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);
   font-weight:600;font-size:17px;letter-spacing:.05em;text-transform:uppercase;transition:transform .08s,box-shadow .08s}
 .fade-out{opacity:0;transform:translateY(8px);pointer-events:none}
 .hidden{display:none!important}
 
 /* ---------- overlays ---------- */
-.veil{position:fixed;inset:0;background:rgba(230,221,200,.78);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);
+.veil{position:fixed;inset:0;background:rgba(247,244,213,.8);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;z-index:2000;opacity:0;pointer-events:none;transition:opacity .35s}
 .veil.on{opacity:1;pointer-events:auto}
 .big{font-weight:700;font-size:64px;line-height:.95;text-transform:uppercase;text-align:center;letter-spacing:-.01em}
@@ -93,7 +97,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 @keyframes pop{from{transform:scale(.6);opacity:0}}
 .time-big{font-weight:700;font-size:30px;color:var(--ink);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 
-.sheet-wrap{position:fixed;inset:0;z-index:3000;background:rgba(60,45,25,.25);opacity:0;pointer-events:none;transition:opacity .25s;display:flex;align-items:flex-end;justify-content:center}
+.sheet-wrap{position:fixed;inset:0;z-index:3000;background:rgba(10,51,35,.3);opacity:0;pointer-events:none;transition:opacity .25s;display:flex;align-items:flex-end;justify-content:center}
 .sheet-wrap.on{opacity:1;pointer-events:auto}
 .sheet{width:100%;max-width:480px;background:var(--bg);border-radius:22px 22px 0 0;padding:26px 24px max(26px,env(safe-area-inset-bottom));
   transform:translateY(100%);transition:transform .35s cubic-bezier(.2,1.2,.4,1);display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
@@ -102,14 +106,14 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .sheet p{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;color:var(--ink);max-width:330px}
 .demo-anim{width:120px;height:80px;position:relative}
 .demo-anim i{position:absolute;width:36px;height:36px;border-radius:8px;background:var(--cell)}
-.demo-anim b{position:absolute;width:36px;height:36px;border-radius:8px;background:#6E9DC4;box-shadow:0 3px 0 var(--piece-edge);animation:demo 2s ease-in-out infinite}
+.demo-anim b{position:absolute;width:36px;height:36px;border-radius:8px;background:var(--rose);box-shadow:0 3px 0 var(--piece-edge);animation:demo 2s ease-in-out infinite}
 @keyframes demo{0%,15%{transform:translate(78px,40px)}55%,100%{transform:translate(42px,4px)}}
 
 /* ---------- results ---------- */
 .results{position:fixed;inset:0;z-index:1500;background:inherit;display:flex;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
 .results.on{opacity:1;pointer-events:auto}
 .results .app{overflow-y:auto;overflow-x:hidden;gap:0}
-.you{width:100%;margin-top:26px;background:var(--dark);color:#fff;border-radius:16px;box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(40,25,10,.18);
+.you{width:100%;margin-top:26px;background:var(--dark);color:#fff;border-radius:16px;box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(var(--shade),.18);
   padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
 .you .k{font-size:13px;letter-spacing:.12em;opacity:.7;text-transform:uppercase;font-weight:500}
 .you .v{font-size:40px;font-weight:700;line-height:1;margin-top:4px;font-variant-numeric:tabular-nums}
@@ -123,14 +127,14 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .row .n{color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .row .a{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--cell);font-size:15px;font-weight:700}
 .row .t{font-variant-numeric:tabular-nums}
-.row.first .a{background:#E9B949;color:#5A3E0C}
+.row.first .a{background:var(--rose);color:#fff}
 .row.me{background:var(--dark);color:#fff;box-shadow:0 4px 0 var(--dark-edge)}
-.row.me .n{color:#CFC4B2}.row.me .a{background:#F6F0E0;color:var(--dark)}
+.row.me .n{color:#A9C9C9}.row.me .a{background:var(--cream);color:var(--dark)}
 .gap{text-align:center;color:var(--ink-soft);font-size:20px;line-height:.6;letter-spacing:.3em}
 .foot{margin:28px 0 8px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .reset{font-family:system-ui,sans-serif;font-size:12px;color:var(--ink-soft);text-decoration:underline;margin-top:6px}
 
-.viewer{position:fixed;inset:0;z-index:4000;background:rgba(40,30,20,.85);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:20px}
+.viewer{position:fixed;inset:0;z-index:4000;background:rgba(10,40,30,.88);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;padding:20px}
 .viewer.on{opacity:1;pointer-events:auto}
 .viewer img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 20px 40px rgba(0,0,0,.4);transform:scale(.94);transition:transform .3s}
 .viewer.on img{transform:none}
@@ -147,7 +151,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
     <button class="sq press" id="helpBtn" aria-label="How to play">?</button>
   </div>
 
-  <div class="stage" id="stage"><div class="board" id="board"></div></div>
+  <div class="stage" id="stage"><div class="board" id="board"><div class="kilim" id="kilim"></div></div></div>
 
   <div class="bottom">
     <div class="hint" id="hint">Today's front page is your puzzle</div>
@@ -217,6 +221,25 @@ const pieces=[]; // {id,cells:[[hx,hy]..] relative to bbox, hx0,hy0 (home bbox o
   Object.keys(m).sort().forEach(k=>{const cs=m[k],mx=Math.min(...cs.map(c=>c[0])),my=Math.min(...cs.map(c=>c[1]));
     pieces.push({id:k,hx:mx,hy:my,cells:cs.map(([x,y])=>[x-mx,y-my]),w:Math.max(...cs.map(c=>c[0]))-mx+1,h:Math.max(...cs.map(c=>c[1]))-my+1})})})();
 
+/* ===== kilim pattern behind the tiles (outlines only, generated SVG tile) ===== */
+(()=>{
+  const T=80,c=T/2;
+  // stepped (kilim-style) diamond: flat top/bottom of half-width h, n stairs of size st
+  const stepped=(cx,cy,h,n,st)=>{const q=[[cx-h,cy-h-n*st],[cx+h,cy-h-n*st]];
+    for(let k=1;k<=n;k++)q.push([cx+h+(k-1)*st,cy-h-n*st+k*st],[cx+h+k*st,cy-h-n*st+k*st]);
+    const r=q.concat(q.slice(1).map(([x,y])=>[x,2*cy-y]).reverse().slice(1)); // right half
+    const all=r.concat(r.slice(1,-1).map(([x,y])=>[2*cx-x,y]).reverse());
+    return '<path d="M'+all.map(p=>p.join(' ')).join('L')+'Z"/>'};
+  const star=(cx,cy)=>{let d='';for(let i=0;i<8;i++){const a=i*Math.PI/4,cs=Math.cos(a),sn=Math.sin(a),L=i%2?7:10;
+      const ex=cx+cs*L,ey=cy+sn*L;d+='M'+cx+' '+cy+'L'+ex+' '+ey;
+      if(i%2===0)d+='M'+(ex-sn*3)+' '+(ey+cs*3)+'L'+(ex+sn*3)+' '+(ey-cs*3)} // hooked tips on the main arms
+    return '<path d="'+d+'"/>'};
+  const motif=(x,y)=>stepped(x,y,4,6,5)+stepped(x,y,3,3,4)+star(x,y);
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+T+' '+T+'" fill="none" stroke="#0A3323" stroke-width="1.3" stroke-linejoin="miter">'+
+    motif(c,c)+motif(0,0)+motif(T,0)+motif(0,T)+motif(T,T)+'</svg>';
+  document.documentElement.style.setProperty('--kilim','url("data:image/svg+xml,'+encodeURIComponent(svg)+'")');
+})();
+
 /* ===== sizing ===== */
 let P=56,G=6,PI=3;
 const board=$('board');
@@ -228,6 +251,7 @@ function measure(){
   board.style.width=BW*P+'px'; board.style.height=BH*P+'px';
   board.style.setProperty('--sr',Math.round(P*.2)+'px');
   board.style.setProperty('--pr',Math.round(P*.16)+'px');
+  board.style.setProperty('--kt',P*2+'px');
 }
 
 /* ===== sound (synthesised, no assets) ===== */
@@ -333,7 +357,7 @@ function attachDrag(p){
 function sparks(p){const [cx,cy]=p.cells[0];const X=(p.x+cx+.5)*P,Y=(p.y+cy+.5)*P;
   for(let i=0;i<8;i++){const s=document.createElement('div');s.className='spark';const a=i/8*Math.PI*2,d=P*.7;
     s.style.left=X+'px';s.style.top=Y+'px';s.style.setProperty('--dx',Math.cos(a)*d+'px');s.style.setProperty('--dy',Math.sin(a)*d+'px');
-    s.style.background=i%2?'#fff':'#F1C75B';board.appendChild(s);setTimeout(()=>s.remove(),600)}}
+    s.style.background=i%2?'#fff':'#D3968C';board.appendChild(s);setTimeout(()=>s.remove(),600)}}
 
 /* ===== flow ===== */
 function start(){
@@ -342,7 +366,7 @@ function start(){
   t0=performance.now();loop();
   $('startBtn').classList.add('fade-out');$('sub').classList.add('fade-out');
   $('hint').classList.add('fade-out');
-  setTimeout(()=>{$('hint').textContent='Drag the blocks to rebuild the page';$('hint').classList.remove('fade-out');$('startBtn').classList.add('hidden')},320);
+  setTimeout(()=>{$('hint').textContent="Drag the puzzle pieces to build today's news cover page";$('hint').classList.remove('fade-out');$('startBtn').classList.add('hidden')},320);
   // shake, then tear into pieces
   wholeEl.classList.remove('idle');board.classList.add('shake');sfx.rip();buzz([12,40,12]);
   setTimeout(()=>{
