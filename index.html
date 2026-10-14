@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#F1EDCB">
+<meta name="theme-color" content="#0A3323">
 <title>Front Page Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,18 +11,18 @@
 <style>
 :root{
   /* palette: dark green #0A3323 · moss #839958 · beige #F7F4D5 · rosy brown #D3968C · midnight green #105666 */
-  --bg:#F1EDCB; --bg-edge:#DEDDB2; --cell:#E2E0B8;
-  --ink:#0A3323; --ink-soft:#6E8247;
-  --cream:#FBF9E6; --cream-edge:#C7CC9C;
-  --dark:#105666; --dark-edge:#0A3323;
-  --piece-edge:#0A3323;
-  --rose:#D3968C; --moss:#839958;
-  --shade:10,51,35;
+  --bg:#0A3323; --bg-mid:#0E4A3F; --bg-edge:#062419; --cell:#072619;
+  --ink:#F7F4D5; --ink-soft:#839958;
+  --cream:#F7F4D5; --cream-edge:#839958; --on-cream:#0A3323;
+  --dark:#D3968C; --dark-edge:#9C6158; --on-dark:#0A3323;
+  --piece-edge:#041A11;
+  --rose:#D3968C; --teal:#105666;
+  --shade:2,14,9;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
 body{
-  background:radial-gradient(ellipse 120% 90% at 50% 45%, #F7F4D5 55%, var(--bg-edge) 100%) fixed, var(--bg);
+  background:radial-gradient(ellipse 120% 90% at 50% 45%, var(--bg-mid) 0%, var(--bg) 55%, var(--bg-edge) 100%) fixed, var(--bg);
   color:var(--ink);font-family:Oswald,"Arial Narrow",Impact,sans-serif;
   overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
@@ -32,12 +32,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 /* ---------- top bar ---------- */
 .top{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
 .label{font-weight:600;font-size:20px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
-.pill{min-width:150px;padding:6px 26px 5px;text-align:center;background:var(--cream);border-radius:12px;
+.pill{color:var(--on-cream);min-width:150px;padding:6px 26px 5px;text-align:center;background:var(--cream);border-radius:12px;
   box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);
   font-weight:700;font-size:28px;line-height:1.15;font-variant-numeric:tabular-nums;transition:transform .2s}
 .pill.tick{animation:tick .25s ease-out}
 @keyframes tick{50%{transform:scale(1.04)}}
-.sq{position:absolute;right:0;top:0;width:52px;height:52px;border-radius:12px;background:var(--cream);
+.sq{color:var(--on-cream);position:absolute;right:0;top:0;width:52px;height:52px;border-radius:12px;background:var(--cream);
   box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);display:grid;place-items:center;
   font-weight:700;font-size:26px;transition:transform .08s,box-shadow .08s}
 .press:active,.press.down{transform:translateY(4px)!important;box-shadow:0 1px 0 var(--cream-edge),0 3px 6px rgba(var(--shade),.10)!important}
@@ -46,8 +46,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .stage{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
 .board{position:relative;touch-action:none}
 .slot{position:absolute;border-radius:var(--sr);background:var(--cell);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.25)}
-.kilim{position:absolute;inset:0;pointer-events:none;opacity:.16;background-image:var(--kilim);background-size:var(--kt) var(--kt);background-position:center}
+  box-shadow:inset 0 2px 3px rgba(0,0,0,.18),inset 0 -1px 0 rgba(247,244,213,.05)}
+.kilim{position:absolute;inset:0;pointer-events:none;opacity:.09;background-image:var(--kilim);background-size:var(--kt) var(--kt);background-position:center}
 .whole{position:absolute;border-radius:var(--pr);background-size:cover;
   filter:drop-shadow(0 5px 0 var(--piece-edge)) drop-shadow(0 12px 14px rgba(var(--shade),.22));
   transition:opacity .25s}
@@ -76,18 +76,18 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .hint{font-weight:700;font-size:26px;line-height:1.08;text-align:center;text-transform:uppercase;max-width:340px;transition:opacity .3s,transform .3s}
 .sub{font-weight:500;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);text-align:center}
 .sub b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.btn-dark{min-width:190px;height:64px;padding:0 34px;border-radius:14px;background:var(--dark);color:#fff;
+.btn-dark{min-width:190px;height:64px;padding:0 34px;border-radius:14px;background:var(--dark);color:var(--on-dark);
   box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(var(--shade),.22);font-weight:700;font-size:28px;letter-spacing:.04em;
   display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform .08s,box-shadow .08s,opacity .25s}
 .btn-dark:active,.btn-dark.down{transform:translateY(6px);box-shadow:0 1px 0 var(--dark-edge),0 4px 8px rgba(var(--shade),.2)}
 .btn-dark svg{width:30px;height:30px}
-.btn-cream{height:48px;padding:0 22px;border-radius:12px;background:var(--cream);box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);
+.btn-cream{color:var(--on-cream);height:48px;padding:0 22px;border-radius:12px;background:var(--cream);box-shadow:0 5px 0 var(--cream-edge),0 9px 14px rgba(var(--shade),.10);
   font-weight:600;font-size:17px;letter-spacing:.05em;text-transform:uppercase;transition:transform .08s,box-shadow .08s}
 .fade-out{opacity:0;transform:translateY(8px);pointer-events:none}
 .hidden{display:none!important}
 
 /* ---------- overlays ---------- */
-.veil{position:fixed;inset:0;background:rgba(247,244,213,.8);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);
+.veil{position:fixed;inset:0;background:rgba(10,51,35,.82);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;z-index:2000;opacity:0;pointer-events:none;transition:opacity .35s}
 .veil.on{opacity:1;pointer-events:auto}
 .big{font-weight:700;font-size:64px;line-height:.95;text-transform:uppercase;text-align:center;letter-spacing:-.01em}
@@ -97,7 +97,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 @keyframes pop{from{transform:scale(.6);opacity:0}}
 .time-big{font-weight:700;font-size:30px;color:var(--ink);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 
-.sheet-wrap{position:fixed;inset:0;z-index:3000;background:rgba(10,51,35,.3);opacity:0;pointer-events:none;transition:opacity .25s;display:flex;align-items:flex-end;justify-content:center}
+.sheet-wrap{position:fixed;inset:0;z-index:3000;background:rgba(2,14,9,.5);opacity:0;pointer-events:none;transition:opacity .25s;display:flex;align-items:flex-end;justify-content:center}
 .sheet-wrap.on{opacity:1;pointer-events:auto}
 .sheet{width:100%;max-width:480px;background:var(--bg);border-radius:22px 22px 0 0;padding:26px 24px max(26px,env(safe-area-inset-bottom));
   transform:translateY(100%);transition:transform .35s cubic-bezier(.2,1.2,.4,1);display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
@@ -112,24 +112,25 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 /* ---------- results ---------- */
 .results{position:fixed;inset:0;z-index:1500;background:inherit;display:flex;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
 .results.on{opacity:1;pointer-events:auto}
-.results .app{overflow-y:auto;overflow-x:hidden;gap:0}
-.you{width:100%;margin-top:26px;background:var(--dark);color:#fff;border-radius:16px;box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(var(--shade),.18);
+.results .app{overflow-y:auto;overflow-x:hidden;gap:0;scrollbar-width:none;-ms-overflow-style:none}
+.results .app::-webkit-scrollbar{display:none}
+.you{width:100%;margin-top:26px;background:var(--dark);color:var(--on-dark);border-radius:16px;box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(var(--shade),.18);
   padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
-.you .k{font-size:13px;letter-spacing:.12em;opacity:.7;text-transform:uppercase;font-weight:500}
+.you .k{font-size:13px;letter-spacing:.12em;opacity:.75;text-transform:uppercase;font-weight:500}
 .you .v{font-size:40px;font-weight:700;line-height:1;margin-top:4px;font-variant-numeric:tabular-nums}
 .you .r{text-align:right}
 .section{width:100%;margin:30px 0 12px;font-weight:600;font-size:18px;letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:baseline}
 .section span{font-size:13px;color:var(--ink-soft);font-weight:500}
 .rows{width:100%;display:flex;flex-direction:column;gap:10px}
-.row{display:grid;grid-template-columns:34px 34px 1fr auto;align-items:center;gap:10px;background:var(--cream);border-radius:12px;padding:9px 14px;
+.row{display:grid;grid-template-columns:34px 34px 1fr auto;align-items:center;gap:10px;background:var(--cream);color:var(--on-cream);border-radius:12px;padding:9px 14px;
   box-shadow:0 4px 0 var(--cream-edge);font-size:18px;font-weight:600;opacity:0;transform:translateY(14px);animation:rowin .4s cubic-bezier(.2,1.3,.4,1) forwards}
 @keyframes rowin{to{opacity:1;transform:none}}
-.row .n{color:var(--ink-soft);font-variant-numeric:tabular-nums}
-.row .a{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--cell);font-size:15px;font-weight:700}
+.row .n{color:#6E8247;font-variant-numeric:tabular-nums}
+.row .a{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:var(--cream);font-size:15px;font-weight:700}
 .row .t{font-variant-numeric:tabular-nums}
-.row.first .a{background:var(--rose);color:#fff}
-.row.me{background:var(--dark);color:#fff;box-shadow:0 4px 0 var(--dark-edge)}
-.row.me .n{color:#A9C9C9}.row.me .a{background:var(--cream);color:var(--dark)}
+.row.first .a{background:var(--rose);color:var(--on-dark)}
+.row.me{background:var(--dark);color:var(--on-dark);box-shadow:0 4px 0 var(--dark-edge)}
+.row.me .n{color:var(--on-dark);opacity:.6}.row.me .a{background:var(--on-dark);color:var(--cream)}
 .gap{text-align:center;color:var(--ink-soft);font-size:20px;line-height:.6;letter-spacing:.3em}
 .foot{margin:28px 0 8px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .reset{font-family:system-ui,sans-serif;font-size:12px;color:var(--ink-soft);text-decoration:underline;margin-top:6px}
@@ -165,7 +166,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
   <div class="big">Well<br>done!</div>
   <div class="time-big" id="wdTime">0:47.3</div>
   <button class="btn-dark" id="nextBtn" aria-label="See leaderboard" style="min-width:150px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M13 5l7 7-7 7"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M13 5l7 7-7 7"/></svg>
   </button>
 </div>
 
@@ -235,7 +236,7 @@ const pieces=[]; // {id,cells:[[hx,hy]..] relative to bbox, hx0,hy0 (home bbox o
       if(i%2===0)d+='M'+(ex-sn*3)+' '+(ey+cs*3)+'L'+(ex+sn*3)+' '+(ey-cs*3)} // hooked tips on the main arms
     return '<path d="'+d+'"/>'};
   const motif=(x,y)=>stepped(x,y,4,6,5)+stepped(x,y,3,3,4)+star(x,y);
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+T+' '+T+'" fill="none" stroke="#0A3323" stroke-width="1.3" stroke-linejoin="miter">'+
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+T+' '+T+'" fill="none" stroke="#F7F4D5" stroke-width="1.3" stroke-linejoin="miter">'+
     motif(c,c)+motif(0,0)+motif(T,0)+motif(0,T)+motif(T,T)+'</svg>';
   document.documentElement.style.setProperty('--kilim','url("data:image/svg+xml,'+encodeURIComponent(svg)+'")');
 })();
@@ -357,7 +358,7 @@ function attachDrag(p){
 function sparks(p){const [cx,cy]=p.cells[0];const X=(p.x+cx+.5)*P,Y=(p.y+cy+.5)*P;
   for(let i=0;i<8;i++){const s=document.createElement('div');s.className='spark';const a=i/8*Math.PI*2,d=P*.7;
     s.style.left=X+'px';s.style.top=Y+'px';s.style.setProperty('--dx',Math.cos(a)*d+'px');s.style.setProperty('--dy',Math.sin(a)*d+'px');
-    s.style.background=i%2?'#fff':'#D3968C';board.appendChild(s);setTimeout(()=>s.remove(),600)}}
+    s.style.background=i%2?'#F7F4D5':'#D3968C';board.appendChild(s);setTimeout(()=>s.remove(),600)}}
 
 /* ===== flow ===== */
 function start(){
