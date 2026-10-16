@@ -220,6 +220,18 @@ body{font-family:var(--sans)}
 .sheet p{font-family:var(--sans)}
 .toast,.vclose{box-shadow:3px 3px 0 var(--hard)}
 .vclose{border-radius:50%;font-family:var(--serif)}
+/* landing: today's edition, shown on the empty grid */
+.edition{position:absolute;left:50%;top:50%;z-index:3;transform:translate(-50%,-50%) rotate(-3deg);text-align:center;pointer-events:none;transition:opacity .25s,transform .25s;
+  background:var(--cream);color:var(--on-cream);padding:10px 22px 12px;border-radius:8px;box-shadow:4px 5px 0 var(--hard);white-space:nowrap}
+.edition small{display:block;font-weight:800;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#9C6158}
+.edition b{display:block;font-family:var(--serif);font-weight:800;font-size:28px;line-height:1.1}
+.edition .lvl{margin-top:9px;padding-top:8px;border-top:1px solid rgba(10,51,35,.25);font-weight:800;font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+.edition .day{margin-top:3px;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#56693A}
+.streak .lvl{display:block;color:var(--cream)}
+.streak .day{display:block;margin-top:4px;color:var(--rose)}
+.streak{text-align:center;line-height:1.3}
+.you .ttl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:6px;opacity:.85}
+.edition.gone{opacity:0;transform:translate(-50%,-60%) rotate(-3deg) scale(.9)}
 /* "Extra!" special edition clipping (replaces WELL DONE) */
 .extra{width:min(86vw,360px);background:var(--cream);color:var(--on-cream);border-radius:6px;padding:16px 20px 18px;box-shadow:6px 7px 0 var(--hard);transform:rotate(-1.5deg);text-align:left}
 .veil.on .extra{animation:extraIn .6s cubic-bezier(.2,1.3,.4,1) both}
@@ -243,7 +255,7 @@ body{font-family:var(--sans)}
     <button class="sq press" id="helpBtn" aria-label="How to play">?</button>
   </div>
 
-  <div class="stage" id="stage"><div class="board" id="board"><div class="kilim" id="kilim"></div></div></div>
+  <div class="stage" id="stage"><div class="board" id="board"><div class="kilim" id="kilim"></div><div class="edition hidden" id="edition"></div></div></div>
 
   <div class="bottom">
     <div class="hint" id="hint">Today's front page is your puzzle</div>
@@ -274,7 +286,7 @@ body{font-family:var(--sans)}
     </div>
     <div class="you">
       <div><div class="k">Your time</div><div class="v" id="myTime">0:47.3</div></div>
-      <div class="r"><div class="k">Your rank</div><div class="v" id="myRank">#412</div></div>
+      <div class="r"><div class="k">Your rank</div><div class="v" id="myRank">#412</div><div class="ttl" id="myTitle"></div></div>
     </div>
     <div class="streak" id="streak"></div>
     <div class="section">Fastest today <span id="ofTotal">of 12,481</span></div>
@@ -327,14 +339,35 @@ const EDITION={
 /* ===== puzzle definition: 4x6 picture on a 6x8 board ===== */
 const PW=5, PH=7, BW=7, BH=9, HOME={x:1,y:1};
 const IMG_H=PW*1.5; // paper is 2:3, so it spans 7.5 cells; the bottom half-cell is cropped
-const LAYOUT=[ // letter = piece id
-  "AABBB",
-  "ACCDB",
-  "ECCDD",
-  "EEFDG",
-  "HFFGG",
-  "HHFIG",
-  "HJJII"];
+/* ===== daily puzzle: same for everyone each day; piece count rises through the week ===== */
+const PIECES_BY_DAY=[9,5,6,6,7,7,8]; // Sun..Sat: Monday is the gentlest, Sunday Edition the biggest
+const localDay=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const NOW=new Date(),N_PIECES=PIECES_BY_DAY[NOW.getDay()],WEEKDAY=NOW.toLocaleDateString('en-GB',{weekday:'long'});
+function rng(a){return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// carve the picture into n compact polyominoes by growing them from spread-out seeds (deterministic per date)
+function makeLayout(n,seedStr){
+  let h=2166136261;for(const ch of seedStr)h=Math.imul(h^ch.charCodeAt(0),16777619);
+  const D=[[1,0],[-1,0],[0,1],[0,-1]],cap=Math.ceil(PW*PH/n)+1;
+  for(let attempt=0;attempt<300;attempt++){
+    const R=rng(h+attempt*7919),g=Array.from({length:PH},()=>Array(PW).fill(-1)),sizes=Array(n).fill(1);
+    const cells=[];for(let y=0;y<PH;y++)for(let x=0;x<PW;x++)cells.push([x,y]);cells.sort(()=>R()-.5);
+    let seeds=[];for(let gap=3;gap>=2&&seeds.length<n;gap--){seeds=[];for(const c of cells)if(seeds.length<n&&seeds.every(q=>Math.abs(q[0]-c[0])+Math.abs(q[1]-c[1])>=gap))seeds.push(c)}
+    if(seeds.length<n)continue;
+    seeds.forEach(([x,y],i)=>g[y][x]=i);
+    let free=PW*PH-n;
+    while(free>0){let grew=false;
+      for(const i of [...Array(n).keys()].sort((a,b)=>sizes[a]-sizes[b]||R()-.5)){if(sizes[i]>=cap)continue;
+        let best=null,bk=-1;
+        for(let y=0;y<PH;y++)for(let x=0;x<PW;x++)if(g[y][x]===-1){const k=D.filter(([dx,dy])=>g[y+dy]&&g[y+dy][x+dx]===i).length;
+          if(k&&k+R()*.9>bk){bk=k+R()*.9;best=[x,y]}}
+        if(best){g[best[1]][best[0]]=i;sizes[i]++;free--;grew=true;break}}
+      if(!grew)break}
+    if(free>0||sizes.some(z=>z<2))continue;
+    return g.map(row=>row.map(i=>String.fromCharCode(65+i)).join(''));
+  }
+  return ["AABBB","ACCDB","ECCDD","EEFDG","HFFGG","HHFIG","HJJII"]; // hand-made 10-piece fallback
+}
+const LAYOUT=makeLayout(N_PIECES,localDay(NOW)); // letter = piece id
 const pieces=[]; // {id,cells:[[hx,hy]..] relative to bbox, hx0,hy0 (home bbox origin in picture), x,y (board pos of bbox), el, w,h}
 (()=>{const m={};LAYOUT.forEach((row,y)=>[...row].forEach((ch,x)=>{(m[ch]=m[ch]||[]).push([x,y])}));
   Object.keys(m).sort().forEach(k=>{const cs=m[k],mx=Math.min(...cs.map(c=>c[0])),my=Math.min(...cs.map(c=>c[1]));
@@ -433,7 +466,7 @@ function buildPiece(p){
 const place=p=>{p.el.style.transform=`translate(${p.x*P}px,${p.y*P}px)`};
 
 /* ===== state ===== */
-const todayKey='fpp-'+new Date().toISOString().slice(0,10);
+const todayKey='fpp-'+localDay(new Date());
 let state='idle',t0=0,finalMs=0,raf=0,z=10;
 function fmt(ms,tenths){const s=ms/1000,m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+String(sec).padStart(2,'0')+(tenths?'.'+Math.floor((ms%1000)/100):'')}
 function loop(){const ms=performance.now()-t0,txt=fmt(ms);if($('timer').textContent!==txt){$('timer').textContent=txt;$('timer').classList.remove('tick');void $('timer').offsetWidth;$('timer').classList.add('tick')}raf=requestAnimationFrame(loop)}
@@ -473,10 +506,14 @@ function attachDrag(p){
       p.el.removeEventListener('pointermove',move);p.el.removeEventListener('pointerup',up);p.el.removeEventListener('pointercancel',up);tgt.removeEventListener('lostpointercapture',up);
       grp.forEach(q=>{q.el.classList.remove('lift');q.el.style.transition='transform .16s cubic-bezier(.3,1.5,.5,1)'});
       const cancel=ev.type!=='pointerup',occ=occupied(grp),fx=(ev.clientX-sx)/P,fy=(ev.clientY-sy)/P;
-      // nearest free spot to where it was dropped (within ~1 cell), so a slightly-off drop still lands
-      let ddx=0,ddy=0,best=1.05;
-      if(!cancel&&moved)for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){const cx=Math.round(fx)+ox,cy=Math.round(fy)+oy,d=Math.hypot(cx-fx,cy-fy);
-        if((cx||cy)&&d<best&&grp.every(q=>fits(q,q.x+cx,q.y+cy,occ))){best=d;ddx=cx;ddy=cy}}
+      // magnetic drop: a spot that makes a correct join pulls the piece in from ~1.6 cells away;
+      // otherwise it lands on the nearest free spot within ~1 cell
+      const joinsAt=(cx,cy)=>pieces.some(q=>!grp.includes(q)&&grp.some(m=>offset(q)===(m.x+cx-m.hx)+','+(m.y+cy-m.hy)&&adjacentHome(m,q)));
+      let ddx=0,ddy=0,best=Infinity;
+      if(!cancel&&moved)for(let ox=-2;ox<=2;ox++)for(let oy=-2;oy<=2;oy++){const cx=Math.round(fx)+ox,cy=Math.round(fy)+oy,d=Math.hypot(cx-fx,cy-fy);
+        if(!(cx||cy)||d>1.6||!grp.every(q=>fits(q,q.x+cx,q.y+cy,occ)))continue;
+        const j=joinsAt(cx,cy);if(!j&&d>1.05)continue;const score=d-(j?1:0);
+        if(score<best){best=score;ddx=cx;ddy=cy}}
       if(ddx||ddy){
         const before=joinedPairs();grp.forEach(q=>{q.x+=ddx;q.y+=ddy;place(q)});
         const nowJoined=pieces.filter(q=>!grp.includes(q)&&grp.some(m=>offset(q)===offset(m)&&adjacentHome(m,q)));
@@ -527,7 +564,7 @@ function start(){
   setTimeout(()=>{$('hint').textContent="Drag the puzzle pieces to build today's news cover page";$('hint').classList.add('small');$('hint').classList.remove('fade-out');$('startBtn').classList.add('hidden');
     $('peekBtn').classList.remove('hidden');$('sub').innerHTML=`<b id="doneCount">${done.toLocaleString('en-IN')}</b> readers already finished`;$('sub').classList.remove('fade-out')},320);
   // today's page drops in from above, slams onto the board, cracks along the seams and shatters
-  board.classList.remove('waiting');drawWhole();
+  board.classList.remove('waiting');$('edition').classList.add('gone');drawWhole();
   Object.assign(wholeEl.style,{transition:'none',opacity:1,zIndex:++z});wholeEl.classList.remove('idle');
   const fall=board.getBoundingClientRect().top+(HOME.y+PH)*P+40,DROP=430,SHOW=520,CRACK=150;
   sfx.fall();
@@ -613,23 +650,30 @@ function confetti(){const cols=['#D3968C','#F7F4D5','#839958','#105666','#F7F4D5
 /* ===== fake leaderboard ===== */
 const NAMES=["Aarav_K","PriyaReads","Rohit.S","NewsJunkie","Meera_22","Kabir.D","Ananya_P","VikramT","Ishita.R","Sahil_M","Neha_B","Arjun.V"];
 const TOTAL=12481;
-function board10(){let t=38200;return NAMES.map((n,i)=>{t+=i===0?0:900+((i*7919)%2600);return{name:n,ms:t}})}
-function rankFor(ms){const s=ms/1000,cdf=1/(1+Math.exp(-(s-110)/26));const fake=board10();if(ms<fake[0].ms)return 1;
+const HARD=N_PIECES/7; // fake times scale with how many pieces today has
+function board10(){let t=38200*HARD;return NAMES.map((n,i)=>{t+=i===0?0:900+((i*7919)%2600);return{name:n,ms:Math.round(t)}})}
+function rankFor(ms){const s=ms/1000,cdf=1/(1+Math.exp(-(s-110*HARD)/(26*HARD)));const fake=board10();if(ms<fake[0].ms)return 1;
   const idx=fake.findIndex(f=>ms<f.ms);if(idx>=0)return idx+1;return Math.max(fake.length+1,Math.round(TOTAL*cdf))}
-const dayKey=d=>d.toISOString().slice(0,10);
+const dayKey=localDay;
 function titleFor(rank){const pct=(1-rank/TOTAL)*100;
   return rank===1?'Editor-in-Chief':pct>=90?'Front Page Editor':pct>=70?'Senior Reporter':pct>=45?'Reporter':pct>=20?'Trainee Reporter':'Delivery Rookie'}
 function saveResult(ms){try{localStorage.setItem(todayKey,String(Math.round(ms)));
   const st=JSON.parse(localStorage.getItem('fpp-streak')||'{}'),today=dayKey(new Date()),yest=dayKey(new Date(Date.now()-864e5));
   if(st.last!==today)localStorage.setItem('fpp-streak',JSON.stringify({last:today,n:st.last===yest?(st.n||0)+1:1}))}catch(e){}}
+// level is display-only in the prototype: it just follows the daily streak so players see that playing daily levels you up
+const LEVELS=[[1,'Beginner'],[3,'Regular'],[7,'Seasoned'],[14,'Front-Pager']];
+const levelFor=day=>{let l=LEVELS[0];for(const x of LEVELS)if(day>=x[0])l=x;const nx=LEVELS[LEVELS.indexOf(l)+1];return{name:l[1],next:nx&&{name:nx[1],in:nx[0]-day}}};
+function playDay(){try{const st=JSON.parse(localStorage.getItem('fpp-streak')||'{}'),today=dayKey(new Date()),yest=dayKey(new Date(Date.now()-864e5));
+  return st.last===today?st.n:st.last===yest?(st.n||0)+1:1}catch(e){return 1}}
 function streak(){try{const st=JSON.parse(localStorage.getItem('fpp-streak')||'{}');return st.last===dayKey(new Date())?st.n:0}catch(e){return 0}}
 function loadResult(){try{const v=localStorage.getItem(todayKey);return v?+v:null}catch(e){return null}}
 function showResults(ms){
   const rank=rankFor(ms);$('myTime').textContent=fmt(ms,true);$('myRank').textContent='#'+rank.toLocaleString('en-IN');
   $('ofTotal').textContent='of '+TOTAL.toLocaleString('en-IN');
-  const sk=streak(),ttl=titleFor(rank);$('streak').textContent=ttl+' · '+(sk>1?`🔥 ${sk} day streak`:'🔥 Day 1');
+  const sk=streak(),ttl=titleFor(rank),lv=levelFor(Math.max(sk,1));$('myTitle').textContent=ttl;
+  $('streak').innerHTML=`<span class="lvl">Level · ${lv.name}</span><span class="day">🔥 Day ${Math.max(sk,1)}${lv.next?` · ${lv.next.in} more day${lv.next.in>1?'s':''} to ${lv.next.name}`:''}</span>`;
   shareInfo={ms,rank,sk,ttl};
-  shareText=`Front Page Puzzle · ${ds}\n⏱ ${fmt(ms,true)} · #${rank.toLocaleString('en-IN')} of ${TOTAL.toLocaleString('en-IN')}${sk>1?` · 🔥${sk}`:''}\nCan you beat me?`+(location.protocol.startsWith('http')?'\n'+location.href.split('#')[0]:'');
+  shareText=`Front Page Puzzle · ${ds} · ${WEEKDAY} edition (${N_PIECES} pieces)\n⏱ ${fmt(ms,true)} · #${rank.toLocaleString('en-IN')} of ${TOTAL.toLocaleString('en-IN')}${sk>1?` · 🔥${sk}`:''}\nCan you beat me?`+(location.protocol.startsWith('http')?'\n'+location.href.split('#')[0]:'');
   let list=board10().slice(0,8);const rows=$('rows');rows.innerHTML='';
   const me={name:'You',ms,me:true,rank};
   let shown;
@@ -667,7 +711,7 @@ async function shareCard(){
   try{const k=await loadImg(getComputedStyle(document.documentElement).getPropertyValue('--kilim').trim().slice(5,-2));
     x.save();x.globalAlpha=.05;x.fillStyle=x.createPattern(k,'repeat');x.fillRect(0,0,W,H);x.restore()}catch(e){}
   x.textAlign='center';x.fillStyle='#F7F4D5';x.font='800 64px Fraunces';x.fillText('Front Page Puzzle',W/2,110);
-  x.fillStyle='#839958';x.font='700 28px Archivo';x.fillText(ds.toUpperCase()+' · TODAY\'S EDITION',W/2,162);
+  x.fillStyle='#839958';x.font='700 28px Archivo';x.fillText(ds.toUpperCase()+' · '+WEEKDAY.toUpperCase()+' EDITION · '+N_PIECES+' PIECES',W/2,162);
   const img=await loadImg(PAPER),pw=500,ph=750;
   x.save();x.translate(W/2,640);x.rotate(-4*Math.PI/180);x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=50;x.shadowOffsetY=24;
   x.fillStyle='#F7F4D5';x.beginPath();x.roundRect(-pw/2-10,-ph/2-10,pw+20,ph+20,18);x.fill();x.shadowColor='transparent';
@@ -718,7 +762,8 @@ function layout(){measure();drawSlots();if(state==='idle')drawWhole();
   else{pieces.forEach(p=>{if(p.el){p.el.remove();p.el=null}});pieces.forEach(p=>{buildPiece(p)});if(wholeEl)drawWhole()}}
 layout();
 // landing hides today's page (it's revealed only by the drop). Already solved today? show the finished page.
-if(prev==null){wholeEl.style.opacity=0;wholeEl.classList.remove('idle');board.classList.add('waiting')}
+if(prev==null){wholeEl.style.opacity=0;wholeEl.classList.remove('idle');board.classList.add('waiting');
+  $('edition').innerHTML=`<small>${NOW.getDay()===0?'Sunday Edition':WEEKDAY+' edition'}</small><b>${N_PIECES} pieces</b><div class="lvl">Level · ${levelFor(playDay()).name}</div><div class="day">🔥 Day ${playDay()}</div>`;$('edition').classList.remove('hidden')}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(state!=='breaking')layout()},120)});
 })();
 </script>
