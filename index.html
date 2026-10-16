@@ -231,9 +231,6 @@ body{font-family:var(--sans)}
 .streak .day{display:block;margin-top:4px;color:var(--rose)}
 .streak{text-align:center;line-height:1.3}
 .you .ttl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:6px;opacity:.85}
-.landing{position:absolute;inset:0;pointer-events:none}
-.landing i{position:absolute;border-radius:calc(var(--pr)*.8);border:2px dashed rgba(247,244,213,.55);background:rgba(247,244,213,.07);transition:left .08s,top .08s}
-.landing.join i{border:2px solid var(--rose);background:rgba(211,150,140,.22)}
 .edition.gone{opacity:0;transform:translate(-50%,-60%) rotate(-3deg) scale(.9)}
 /* "Extra!" special edition clipping (replaces WELL DONE) */
 .extra{width:min(86vw,360px);background:var(--cream);color:var(--on-cream);border-radius:6px;padding:16px 20px 18px;box-shadow:6px 7px 0 var(--hard);transform:rotate(-1.5deg);text-align:left}
@@ -496,45 +493,29 @@ const solved=()=>pieces.every(p=>offset(p)===offset(pieces[0]));
 
 /* ===== drag ===== */
 let lastJoin=0,combo=0,lastProgress=0,peeking=false,dragging=false;
-/* best landing spot for a dragged group, given the drag offset in cells (fx,fy).
-   A spot that makes a correct join wins from up to ~2.5 cells away; otherwise the nearest free spot (up to 3 cells). */
-function bestSpot(grp,fx,fy){const occ=occupied(grp);let best=null,bs=Infinity;
-  const joinsAt=(cx,cy)=>pieces.some(q=>!grp.includes(q)&&grp.some(m=>offset(q)===(m.x+cx-m.hx)+','+(m.y+cy-m.hy)&&adjacentHome(m,q)));
-  for(let ox=-3;ox<=3;ox++)for(let oy=-3;oy<=3;oy++){const cx=Math.round(fx)+ox,cy=Math.round(fy)+oy,d=Math.hypot(cx-fx,cy-fy);
-    if(d>3.2||!grp.every(q=>fits(q,q.x+cx,q.y+cy,occ)))continue;
-    const j=(cx||cy)&&d<=2.5&&joinsAt(cx,cy),sc=j?d-10:d; // any join in range beats any plain spot
-    if(sc<bs){bs=sc;best={cx,cy,j}}}
-  return best}
-let previewEl=null,previewKey='';
-function showPreview(grp,spot){if(!previewEl){previewEl=document.createElement('div');previewEl.className='landing';board.appendChild(previewEl)}
-  const key=spot?spot.cx+','+spot.cy+','+spot.j:'';if(key===previewKey)return;previewKey=key;previewEl.innerHTML='';
-  previewEl.classList.toggle('join',!!(spot&&spot.j));previewEl.style.zIndex=z-grp.length; // just under the lifted pieces
-  if(!spot)return;
-  grp.forEach(q=>q.cells.forEach(([x,y])=>{const c=document.createElement('i');
-    Object.assign(c.style,{left:(q.x+spot.cx+x)*P+PI+'px',top:(q.y+spot.cy+y)*P+PI+'px',width:P-2*PI+'px',height:P-2*PI+'px'});previewEl.appendChild(c)}))}
-function hidePreview(){previewKey='';if(previewEl)previewEl.innerHTML=''}
 function attachDrag(p){
   p.el.addEventListener('pointerdown',e=>{
     if(state!=='play'||peeking||dragging)return;e.preventDefault();dragging=true;
-    const grp=groupOf(p),base=grp.map(q=>({x:q.x*P,y:q.y*P})),sx=e.clientX,sy=e.clientY,tgt=e.target,
-      lift=e.pointerType==='touch'?-P*.5:0; // on phones the piece rides above the finger so it stays visible
-    let moved=false,ended=false,spot=null,vx=0,vy=0;
+    const grp=groupOf(p),base=grp.map(q=>({x:q.x*P,y:q.y*P})),sx=e.clientX,sy=e.clientY,tgt=e.target;let moved=false,ended=false;
     try{tgt.setPointerCapture(e.pointerId)}catch(_){}
     grp.forEach(q=>{q.el.getAnimations().forEach(a=>a.finish());q.el.style.transition='';place(q);q.el.style.zIndex=++z;q.el.classList.add('lift');q.el.classList.toggle('grp',grp.length>1);q.el.classList.remove('nudge')});
     sfx.pick();buzz(5);
-    const move=ev=>{const dx=ev.clientX-sx,dy=ev.clientY-sy+(moved?lift:0);if(!moved&&Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)>3)moved=true;
-      const prev=spot&&spot.j;spot=moved?bestSpot(grp,dx/P,dy/P):null;
-      // magnet: near a correct join the piece is visibly pulled toward it
-      vx=dx;vy=dy;if(spot&&spot.j){vx=dx+(spot.cx*P-dx)*.45;vy=dy+(spot.cy*P-dy)*.45}
-      if(spot&&spot.j&&!prev){tone(990,.06,{vol:.04,type:'triangle'});buzz(4)}
-      grp.forEach((q,i)=>q.el.style.transform=`translate(${base[i].x+vx}px,${base[i].y+vy}px)`);
-      showPreview(grp,moved?spot:null)};
-    const up=ev=>{if(ended)return;ended=true;dragging=false;hidePreview();
+    const move=ev=>{const dx=ev.clientX-sx,dy=ev.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+      grp.forEach((q,i)=>q.el.style.transform=`translate(${base[i].x+dx}px,${base[i].y+dy}px)`)};
+    const up=ev=>{if(ended)return;ended=true;dragging=false;
       p.el.removeEventListener('pointermove',move);p.el.removeEventListener('pointerup',up);p.el.removeEventListener('pointercancel',up);tgt.removeEventListener('lostpointercapture',up);
-      grp.forEach(q=>{q.el.classList.remove('lift');q.el.style.transition='transform .18s cubic-bezier(.3,1.4,.5,1)'});
-      if(ev.type==='pointerup'&&moved)spot=bestSpot(grp,vx/P,vy/P);else spot=null;
-      if(spot&&(spot.cx||spot.cy)){
-        const before=joinedPairs();grp.forEach(q=>{q.x+=spot.cx;q.y+=spot.cy;place(q)});
+      grp.forEach(q=>{q.el.classList.remove('lift');q.el.style.transition='transform .16s cubic-bezier(.3,1.5,.5,1)'});
+      const cancel=ev.type!=='pointerup',occ=occupied(grp),fx=(ev.clientX-sx)/P,fy=(ev.clientY-sy)/P;
+      // magnetic drop: a spot that makes a correct join pulls the piece in from ~1.6 cells away;
+      // otherwise it lands on the nearest free spot within ~1 cell
+      const joinsAt=(cx,cy)=>pieces.some(q=>!grp.includes(q)&&grp.some(m=>offset(q)===(m.x+cx-m.hx)+','+(m.y+cy-m.hy)&&adjacentHome(m,q)));
+      let ddx=0,ddy=0,best=Infinity;
+      if(!cancel&&moved)for(let ox=-2;ox<=2;ox++)for(let oy=-2;oy<=2;oy++){const cx=Math.round(fx)+ox,cy=Math.round(fy)+oy,d=Math.hypot(cx-fx,cy-fy);
+        if(!(cx||cy)||d>1.6||!grp.every(q=>fits(q,q.x+cx,q.y+cy,occ)))continue;
+        const j=joinsAt(cx,cy);if(!j&&d>1.05)continue;const score=d-(j?1:0);
+        if(score<best){best=score;ddx=cx;ddy=cy}}
+      if(ddx||ddy){
+        const before=joinedPairs();grp.forEach(q=>{q.x+=ddx;q.y+=ddy;place(q)});
         const nowJoined=pieces.filter(q=>!grp.includes(q)&&grp.some(m=>offset(q)===offset(m)&&adjacentHome(m,q)));
         if(joinedPairs()>before&&nowJoined.length){
           const now=performance.now();combo=now-lastJoin<5000?combo+1:1;lastJoin=lastProgress=now;
@@ -543,8 +524,8 @@ function attachDrag(p){
           if(!solved())breaking();
         }else{sfx.snap();buzz(8)}
         if(solved())setTimeout(win,180);
-      }else{grp.forEach(place);if(moved)(spot?sfx.snap():sfx.nope())}
-      setTimeout(()=>grp.forEach(q=>q.el.style.transition=''),200)};
+      }else{grp.forEach(place);if(moved)sfx.nope()}
+      setTimeout(()=>grp.forEach(q=>q.el.style.transition=''),180)};
     p.el.addEventListener('pointermove',move);p.el.addEventListener('pointerup',up);p.el.addEventListener('pointercancel',up);tgt.addEventListener('lostpointercapture',up);
   });
 }
