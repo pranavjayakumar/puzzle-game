@@ -57,6 +57,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
   filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 7px 8px rgba(var(--shade),.18));
   transition:filter .15s}
 .piece .c{position:absolute;background-repeat:no-repeat}
+/* only the image cells are grabbable: the empty corners of a piece's bounding box must not steal taps from neighbours */
+.piece,.piece .inner{pointer-events:none}.piece .c{pointer-events:auto}
 .piece.lift{filter:drop-shadow(0 4px 0 var(--piece-edge)) drop-shadow(0 0 0 #fff) drop-shadow(0 18px 18px rgba(var(--shade),.32));cursor:grabbing}
 .piece.lift .inner{transform:scale(1.06) rotate(-1deg)}
 .piece .inner{position:relative;transition:transform .14s cubic-bezier(.3,1.6,.5,1);transform-origin:var(--ox) var(--oy)}
@@ -112,7 +114,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 /* ---------- results ---------- */
 .results{position:fixed;inset:0;z-index:1500;background:inherit;display:flex;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
 .results.on{opacity:1;pointer-events:auto}
-.results .app{overflow-y:auto;overflow-x:hidden;gap:0;scrollbar-width:none;-ms-overflow-style:none}
+.results .app{width:100%;overflow-y:auto;overflow-x:hidden;gap:0;scrollbar-width:none;-ms-overflow-style:none}
 .results .app::-webkit-scrollbar{display:none}
 .you{width:100%;margin-top:26px;background:var(--dark);color:var(--on-dark);border-radius:16px;box-shadow:0 7px 0 var(--dark-edge),0 13px 18px rgba(var(--shade),.18);
   padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
@@ -128,6 +130,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .row .n{color:#6E8247;font-variant-numeric:tabular-nums}
 .row .a{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--teal);color:var(--cream);font-size:15px;font-weight:700}
 .row .t{font-variant-numeric:tabular-nums}
+.row>span:nth-child(3){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row.first .a{background:var(--rose);color:var(--on-dark)}
 .row.me{background:var(--dark);color:var(--on-dark);box-shadow:0 4px 0 var(--dark-edge)}
 .row.me .n{color:var(--on-dark);opacity:.6}.row.me .a{background:var(--on-dark);color:var(--cream)}
@@ -147,6 +150,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .peek{display:inline-flex;align-items:center;gap:8px;height:44px;font-size:16px;touch-action:none}
 .peek svg{width:20px;height:20px}
 .peek em{font-style:normal;color:#9C6158}
+.peek.used{opacity:.4;pointer-events:none}
+/* landing: the page is hidden; empty cells shimmer in a slow diagonal wave */
+.board.waiting .slot{animation:slotwave 3.4s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes slotwave{0%,60%,100%{filter:none}30%{filter:brightness(1.6)}}
 .ghost{position:absolute;z-index:5000;border-radius:var(--pr);background-size:cover;opacity:0;transform:scale(.97);transition:opacity .16s,transform .16s;pointer-events:none;
   box-shadow:0 0 0 3px var(--cream),0 20px 40px rgba(0,0,0,.45)}
 .ghost.on{opacity:.94;transform:none}
@@ -202,7 +209,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
   <div class="bottom">
     <div class="hint" id="hint">Today's front page is your puzzle</div>
     <button class="btn-dark" id="startBtn">START</button>
-    <button class="btn-cream press peek hidden" id="peekBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Hold to peek <em>+3s</em></button>
+    <button class="btn-cream press peek hidden" id="peekBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="peekLabel">Peek once</span> <em>+5s</em></button>
     <div class="sub" id="sub"><b id="liveCount">12,481</b> readers solving today</div>
   </div>
 </div>
@@ -246,7 +253,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
   <div class="sheet">
     <div class="demo-anim"><i style="left:42px;top:4px"></i><b></b></div>
     <h2>How to play</h2>
-    <p>Tap Start and today's front page breaks into blocks. Drag them back together. The fastest time today wins.</p>
+    <p>Tap Start and today's front page drops and shatters. Drag the pieces back together — you can peek once for +5s. Fastest time today wins.</p>
     <button class="btn-dark" id="gotIt" style="height:56px;font-size:22px;min-width:160px">GOT IT</button>
   </div>
 </div>
@@ -278,14 +285,16 @@ const EDITION={
 };
 
 /* ===== puzzle definition: 4x6 picture on a 6x8 board ===== */
-const PW=4, PH=6, BW=6, BH=8, HOME={x:1,y:1};
+const PW=5, PH=7, BW=7, BH=9, HOME={x:1,y:1};
+const IMG_H=PW*1.5; // paper is 2:3, so it spans 7.5 cells; the bottom half-cell is cropped
 const LAYOUT=[ // letter = piece id
-  "AAAB",
-  "CABB",
-  "CCDB",
-  "EDDF",
-  "EEGF",
-  "EGGF"];
+  "AABBB",
+  "ACCDB",
+  "ECCDD",
+  "EEFDG",
+  "HFFGG",
+  "HHFIG",
+  "HJJII"];
 const pieces=[]; // {id,cells:[[hx,hy]..] relative to bbox, hx0,hy0 (home bbox origin in picture), x,y (board pos of bbox), el, w,h}
 (()=>{const m={};LAYOUT.forEach((row,y)=>[...row].forEach((ch,x)=>{(m[ch]=m[ch]||[]).push([x,y])}));
   Object.keys(m).sort().forEach(k=>{const cs=m[k],mx=Math.min(...cs.map(c=>c[0])),my=Math.min(...cs.map(c=>c[1]));
@@ -351,6 +360,8 @@ const sfx={
   stamp(){noise(.16,{freq:260,q:.7,vol:.55,type:'lowpass'});tone(120,.3,{to:50,vol:.24});noise(.05,{freq:2400,vol:.12})},
   nope(){tone(170,.14,{to:120,vol:.12,type:'triangle'});noise(.06,{freq:500,vol:.12})},
   win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.45,{type:'triangle',vol:.1,delay:i*.09}));noise(.9,{freq:6000,q:.4,vol:.05,type:'highpass',delay:.3})},
+  fall(){noise(.45,{freq:2800,sweep:420,q:.8,vol:.13})},
+  slam(){noise(.2,{freq:240,q:.6,vol:.65,type:'lowpass'});tone(90,.38,{to:38,vol:.32});noise(.09,{freq:1900,vol:.16})},
   whoosh(){noise(.3,{freq:400,sweep:2400,q:.8,vol:.12})}
 };
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
@@ -359,9 +370,10 @@ const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 let wholeEl=null;
 function drawSlots(){board.querySelectorAll('.slot').forEach(e=>e.remove());
   for(let y=0;y<BH;y++)for(let x=0;x<BW;x++){const s=document.createElement('div');s.className='slot';
-    Object.assign(s.style,{left:x*P+G/2+'px',top:y*P+G/2+'px',width:P-G+'px',height:P-G+'px'});board.prepend(s)}}
+    Object.assign(s.style,{left:x*P+G/2+'px',top:y*P+G/2+'px',width:P-G+'px',height:P-G+'px'});s.style.setProperty('--d',(x+y)*.09+'s');board.prepend(s)}}
 function drawWhole(){if(!wholeEl){wholeEl=document.createElement('div');wholeEl.className='whole idle';board.appendChild(wholeEl)}
-  Object.assign(wholeEl.style,{left:HOME.x*P+PI+'px',top:HOME.y*P+PI+'px',width:PW*P-2*PI+'px',height:PH*P-2*PI+'px',backgroundImage:`url(${PAPER})`})}
+  Object.assign(wholeEl.style,{left:HOME.x*P+PI+'px',top:HOME.y*P+PI+'px',width:PW*P-2*PI+'px',height:PH*P-2*PI+'px',backgroundImage:`url(${PAPER})`,
+    backgroundSize:`${PW*P}px ${IMG_H*P}px`,backgroundPosition:`${-PI}px ${-PI}px`})}
 function buildPiece(p){
   const el=document.createElement('div');el.className='piece';const inner=document.createElement('div');inner.className='inner';el.appendChild(inner);
   const has=(dx,dy)=>p.cells.some(c=>c[0]===dx&&c[1]===dy), R=Math.round(P*.16);
@@ -370,7 +382,7 @@ function buildPiece(p){
     const x0=cx*P+(L?PI:0),y0=cy*P+(T?PI:0),w=P-(L?PI:0)-(Rt?PI:0),h=P-(T?PI:0)-(B?PI:0);
     const c=document.createElement('div');c.className='c';
     Object.assign(c.style,{left:x0+'px',top:y0+'px',width:w+.6+'px',height:h+.6+'px',
-      backgroundImage:`url(${PAPER})`,backgroundSize:`${PW*P}px ${PH*P}px`,
+      backgroundImage:`url(${PAPER})`,backgroundSize:`${PW*P}px ${IMG_H*P}px`,
       backgroundPosition:`${-((p.hx+cx)*P+(L?PI:0))}px ${-((p.hy+cy)*P+(T?PI:0))}px`,
       borderRadius:`${T&&L?R:0}px ${T&&Rt?R:0}px ${B&&Rt?R:0}px ${B&&L?R:0}px`});
     inner.appendChild(c)});
@@ -407,19 +419,25 @@ function groupOf(p){const g=[p];for(let i=0;i<g.length;i++)for(const q of pieces
 const solved=()=>pieces.every(p=>offset(p)===offset(pieces[0]));
 
 /* ===== drag ===== */
-let lastJoin=0,combo=0,lastProgress=0,peeking=false;
+let lastJoin=0,combo=0,lastProgress=0,peeking=false,dragging=false;
 function attachDrag(p){
   p.el.addEventListener('pointerdown',e=>{
-    if(state!=='play'||peeking)return;e.preventDefault();
-    const grp=groupOf(p),base=grp.map(q=>({x:q.x*P,y:q.y*P})),sx=e.clientX,sy=e.clientY;let moved=false;
-    p.el.setPointerCapture(e.pointerId);grp.forEach(q=>{q.el.style.zIndex=++z;q.el.classList.add('lift');q.el.classList.toggle('grp',grp.length>1);q.el.classList.remove('nudge')});
+    if(state!=='play'||peeking||dragging)return;e.preventDefault();dragging=true;
+    const grp=groupOf(p),base=grp.map(q=>({x:q.x*P,y:q.y*P})),sx=e.clientX,sy=e.clientY,tgt=e.target;let moved=false,ended=false;
+    try{tgt.setPointerCapture(e.pointerId)}catch(_){}
+    grp.forEach(q=>{q.el.getAnimations().forEach(a=>a.finish());q.el.style.transition='';place(q);q.el.style.zIndex=++z;q.el.classList.add('lift');q.el.classList.toggle('grp',grp.length>1);q.el.classList.remove('nudge')});
     sfx.pick();buzz(5);
     const move=ev=>{const dx=ev.clientX-sx,dy=ev.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
       grp.forEach((q,i)=>q.el.style.transform=`translate(${base[i].x+dx}px,${base[i].y+dy}px)`)};
-    const up=ev=>{p.el.removeEventListener('pointermove',move);p.el.removeEventListener('pointerup',up);p.el.removeEventListener('pointercancel',up);
+    const up=ev=>{if(ended)return;ended=true;dragging=false;
+      p.el.removeEventListener('pointermove',move);p.el.removeEventListener('pointerup',up);p.el.removeEventListener('pointercancel',up);tgt.removeEventListener('lostpointercapture',up);
       grp.forEach(q=>{q.el.classList.remove('lift');q.el.style.transition='transform .16s cubic-bezier(.3,1.5,.5,1)'});
-      const ddx=Math.round((ev.clientX-sx)/P),ddy=Math.round((ev.clientY-sy)/P),occ=occupied(grp);
-      if((ddx||ddy)&&grp.every(q=>fits(q,q.x+ddx,q.y+ddy,occ))){
+      const cancel=ev.type!=='pointerup',occ=occupied(grp),fx=(ev.clientX-sx)/P,fy=(ev.clientY-sy)/P;
+      // nearest free spot to where it was dropped (within ~1 cell), so a slightly-off drop still lands
+      let ddx=0,ddy=0,best=1.05;
+      if(!cancel&&moved)for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){const cx=Math.round(fx)+ox,cy=Math.round(fy)+oy,d=Math.hypot(cx-fx,cy-fy);
+        if((cx||cy)&&d<best&&grp.every(q=>fits(q,q.x+cx,q.y+cy,occ))){best=d;ddx=cx;ddy=cy}}
+      if(ddx||ddy){
         const before=joinedPairs();grp.forEach(q=>{q.x+=ddx;q.y+=ddy;place(q)});
         const nowJoined=pieces.filter(q=>!grp.includes(q)&&grp.some(m=>offset(q)===offset(m)&&adjacentHome(m,q)));
         if(joinedPairs()>before&&nowJoined.length){
@@ -431,7 +449,7 @@ function attachDrag(p){
         if(solved())setTimeout(win,180);
       }else{grp.forEach(place);if(moved)sfx.nope()}
       setTimeout(()=>grp.forEach(q=>q.el.style.transition=''),180)};
-    p.el.addEventListener('pointermove',move);p.el.addEventListener('pointerup',up);p.el.addEventListener('pointercancel',up);
+    p.el.addEventListener('pointermove',move);p.el.addEventListener('pointerup',up);p.el.addEventListener('pointercancel',up);tgt.addEventListener('lostpointercapture',up);
   });
 }
 let newsIdx=0;
@@ -445,13 +463,15 @@ setInterval(()=>{if(state!=='play'||peeking||performance.now()-lastProgress<1500
   const pairs=[];for(const a of pieces)for(const b of pieces)if(a.id<b.id&&adjacentHome(a,b)&&offset(a)!==offset(b))pairs.push([a,b]);
   if(!pairs.length)return;const pr=pairs[Math.floor(Math.random()*pairs.length)];
   pr.forEach(q=>{q.el.classList.remove('nudge');void q.el.offsetWidth;q.el.classList.add('nudge')});sfx.pick();lastProgress=performance.now()-7000},1000);
-/* hold to peek at the full page, +3s each time */
-let ghostEl=null;
-function peekOn(e){if(state!=='play'||peeking)return;e.preventDefault();peeking=true;t0-=3000;sfx.peek();buzz(10);floatAt($('timer'),'+3s');
+/* hold to peek at the full page: once per game, +5s */
+let ghostEl=null,peeksLeft=1;
+function peekOn(e){if(state!=='play'||peeking||peeksLeft<1)return;e.preventDefault();peeksLeft--;peeking=true;t0-=5000;sfx.peek();buzz(10);floatAt($('timer'),'+5s');
   if(!ghostEl){ghostEl=document.createElement('div');ghostEl.className='ghost';board.appendChild(ghostEl)}
-  Object.assign(ghostEl.style,{left:HOME.x*P+'px',top:HOME.y*P+'px',width:PW*P+'px',height:PH*P+'px',backgroundImage:`url(${PAPER})`});
+  Object.assign(ghostEl.style,{left:HOME.x*P+'px',top:HOME.y*P+'px',width:PW*P+'px',height:PH*P+'px',backgroundImage:`url(${PAPER})`,
+    backgroundSize:`${PW*P}px ${IMG_H*P}px`,backgroundPosition:'0 0'});
   requestAnimationFrame(()=>ghostEl.classList.add('on'))}
-function peekOff(){if(!peeking)return;peeking=false;ghostEl&&ghostEl.classList.remove('on')}
+function peekOff(){if(!peeking)return;peeking=false;ghostEl&&ghostEl.classList.remove('on');
+  if(peeksLeft<1){$('peekBtn').classList.add('used');$('peekLabel').textContent='Peek used'}}
 function sparks(p){const [cx,cy]=p.cells[0];const X=(p.x+cx+.5)*P,Y=(p.y+cy+.5)*P;
   for(let i=0;i<8;i++){const s=document.createElement('div');s.className='spark';const a=i/8*Math.PI*2,d=P*.7;
     s.style.left=X+'px';s.style.top=Y+'px';s.style.setProperty('--dx',Math.cos(a)*d+'px');s.style.setProperty('--dy',Math.sin(a)*d+'px');
@@ -466,19 +486,28 @@ function start(){
   $('hint').classList.add('fade-out');
   setTimeout(()=>{$('hint').textContent="Drag the puzzle pieces to build today's news cover page";$('hint').classList.add('small');$('hint').classList.remove('fade-out');$('startBtn').classList.add('hidden');
     $('peekBtn').classList.remove('hidden');$('sub').innerHTML=`<b id="doneCount">${done.toLocaleString('en-IN')}</b> readers already finished`;$('sub').classList.remove('fade-out')},320);
-  // shake, then tear into pieces
-  wholeEl.classList.remove('idle');board.classList.add('shake');sfx.rip();buzz([12,40,12]);
+  // today's page drops in from above, slams onto the board, cracks along the seams and shatters
+  board.classList.remove('waiting');drawWhole();
+  Object.assign(wholeEl.style,{transition:'none',opacity:1,zIndex:++z});wholeEl.classList.remove('idle');
+  const fall=board.getBoundingClientRect().top+(HOME.y+PH)*P+40,DROP=430,SHOW=520,CRACK=150;
+  sfx.fall();
+  wholeEl.animate([{transform:`translateY(${-fall}px) rotate(-7deg) scale(1.06)`},{transform:'translateY(0) rotate(0deg) scale(1)'}],{duration:DROP,easing:'cubic-bezier(.6,0,1,.6)'});
+  setTimeout(()=>{board.classList.add('shake');sfx.slam();buzz([25,30,15]);dust();
+    wholeEl.animate([{transform:'scale(1.03,.95)'},{transform:'scale(1)'}],{duration:200,easing:'ease-out'})},DROP);
+  setTimeout(()=>{board.classList.remove('shake');
+    pieces.forEach(p=>{p.x=HOME.x+p.hx;p.y=HOME.y+p.hy;buildPiece(p);p.el.style.zIndex=++z});
+    wholeEl.style.opacity=0;sfx.rip();buzz([10,30,10]);
+    pieces.forEach(p=>{const cx=(p.hx+p.w/2-PW/2),cy=(p.hy+p.h/2-PH/2);   // hairline cracks open
+      p.el.animate([{transform:`translate(${p.x*P}px,${p.y*P}px)`},{transform:`translate(${p.x*P+cx*2}px,${p.y*P+cy*2}px)`}],{duration:CRACK,fill:'forwards'})});
+  },DROP+SHOW);
   setTimeout(()=>{
-    board.classList.remove('shake');
-    pieces.forEach(p=>{p.x=HOME.x+p.hx;p.y=HOME.y+p.hy;buildPiece(p)});
-    wholeEl.style.opacity=0;
-    // home positions are kept so we can animate from them
+    pieces.forEach(p=>p.el.getAnimations().forEach(a=>a.cancel()));
     const from=pieces.map(p=>({x:p.x*P,y:p.y*P}));
     scatter();pieces.forEach(place);sfx.whoosh();
     pieces.forEach((p,i)=>{
       const f=from[i],tx=p.x*P,ty=p.y*P,cxp=(p.hx+p.w/2-PW/2),cyp=(p.hy+p.h/2-PH/2);
-      const pop={x:f.x+cxp*P*.25,y:f.y+cyp*P*.25-P*.6};
-      const rot=(Math.random()*24-12);
+      const pop={x:f.x+cxp*P*.35,y:f.y+cyp*P*.35-P*.7};
+      const rot=(Math.random()*30-15);
       p.el.style.zIndex=++z;
       p.el.animate([
         {transform:`translate(${f.x}px,${f.y}px) rotate(0deg)`},
@@ -486,12 +515,17 @@ function start(){
         {transform:`translate(${tx}px,${ty+P*.12}px) rotate(${-rot*.15}deg)`,offset:.82},
         {transform:`translate(${tx}px,${ty-P*.05}px) rotate(0deg)`,offset:.92},
         {transform:`translate(${tx}px,${ty}px) rotate(0deg)`}
-      ],{duration:820,delay:120+i*85,easing:'linear',fill:'backwards'});
-      setTimeout(()=>sfx.land(i),120+i*85+680);
+      ],{duration:760,delay:i*55,easing:'linear',fill:'backwards'});
+      setTimeout(()=>sfx.land(i),i*55+620);
     });
-    setTimeout(()=>{state='play';lastProgress=performance.now()},120+pieces.length*85+700);
-  },380);
+    // if the tab was hidden, animations pause while timers don't; snap visuals to the real positions before play
+    setTimeout(()=>{pieces.forEach(p=>p.el.getAnimations().forEach(a=>a.finish()));state='play';lastProgress=performance.now()},pieces.length*55+680);
+  },DROP+SHOW+CRACK);
 }
+function dust(){const y=(HOME.y+PH)*P;
+  for(let i=0;i<16;i++){const s=document.createElement('div');s.className='spark';const x=(HOME.x+Math.random()*PW)*P,side=x<(HOME.x+PW/2)*P?-1:1;
+    s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',side*(P*.4+Math.random()*P*1.2)+'px');s.style.setProperty('--dy',-(Math.random()*P*.6)+'px');
+    s.style.background='rgba(247,244,213,.7)';s.style.zIndex=++z;board.appendChild(s);setTimeout(()=>s.remove(),600)}}
 function win(){
   if(state!=='play')return;state='won';cancelAnimationFrame(raf);finalMs=performance.now()-t0;
   $('timer').textContent=fmt(finalMs);
@@ -642,12 +676,8 @@ try{if(!localStorage.getItem('fpp-seen')&&prev==null){localStorage.setItem('fpp-
 function layout(){measure();drawSlots();if(state==='idle')drawWhole();
   else{pieces.forEach(p=>{if(p.el){p.el.remove();p.el=null}});pieces.forEach(p=>{buildPiece(p)});if(wholeEl)drawWhole()}}
 layout();
-// today's paper gets delivered: thrown in rolled up, then unrolls onto the board
-wholeEl.animate([
-  {transform:'translate(45%,-140%) rotate(28deg) scale(.45)',clipPath:'inset(0 0 86% 0 round 14px)'},
-  {transform:'translate(0,5%) rotate(-3deg) scale(1)',clipPath:'inset(0 0 86% 0 round 14px)',offset:.45},
-  {transform:'translate(0,0) rotate(0deg)',clipPath:'inset(0 0 86% 0 round 14px)',offset:.55},
-  {transform:'none',clipPath:'inset(0 0 0% 0 round 0px)'}],{duration:1350,easing:'cubic-bezier(.3,.8,.3,1)'});
+// landing hides today's page (it's revealed only by the drop). Already solved today? show the finished page.
+if(prev==null){wholeEl.style.opacity=0;wholeEl.classList.remove('idle');board.classList.add('waiting')}
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(state!=='breaking')layout()},120)});
 })();
 </script>
