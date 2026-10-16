@@ -7,7 +7,7 @@
 <title>Front Page Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Noto+Sans+Devanagari:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Archivo:wght@500;600;700;800&family=Noto+Sans+Devanagari:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   /* palette: dark green #0A3323 · moss #839958 · beige #F7F4D5 · rosy brown #D3968C · midnight green #105666 */
@@ -23,7 +23,7 @@
 html,body{margin:0;height:100%}
 body{
   background:radial-gradient(ellipse 120% 90% at 50% 45%, var(--bg-mid) 0%, var(--bg) 55%, var(--bg-edge) 100%) fixed, var(--bg);
-  color:var(--ink);font-family:Oswald,"Arial Narrow",Impact,sans-serif;
+  color:var(--ink);font-family:"Archivo","Helvetica Neue",Arial,sans-serif;
   overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;
 }
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
@@ -92,12 +92,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .veil{position:fixed;inset:0;background:rgba(10,51,35,.82);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;z-index:2000;opacity:0;pointer-events:none;transition:opacity .35s}
 .veil.on{opacity:1;pointer-events:auto}
-.big{font-weight:700;font-size:64px;line-height:.95;text-transform:uppercase;text-align:center;letter-spacing:-.01em}
-.veil.on .big{animation:pop .5s cubic-bezier(.2,1.6,.4,1) both}
 .veil.on .btn-dark{animation:pop .5s .15s cubic-bezier(.2,1.6,.4,1) both}
 .veil.on .sub{animation:pop .5s .08s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes pop{from{transform:scale(.6);opacity:0}}
-.time-big{font-weight:700;font-size:30px;color:var(--ink);letter-spacing:.02em;font-variant-numeric:tabular-nums}
 
 .sheet-wrap{position:fixed;inset:0;z-index:3000;background:rgba(2,14,9,.5);opacity:0;pointer-events:none;transition:opacity .25s;display:flex;align-items:flex-end;justify-content:center}
 .sheet-wrap.on{opacity:1;pointer-events:auto}
@@ -180,8 +177,6 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hint.news{animation:newsIn .45s cubic-bezier(.2,1.4,.4,1)}
 @keyframes newsIn{from{opacity:0;transform:translateY(10px) scale(.96)}}
-.rank-title{font-weight:700;font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:var(--rose);border:2px solid var(--rose);border-radius:8px;padding:5px 14px 3px;transform:rotate(-3deg)}
-.veil.on .rank-title{animation:pop .5s .12s cubic-bezier(.2,1.6,.4,1) both}
 /* read today's stories */
 .vwrap{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:480px;max-height:100%}
 .vtop{font-weight:600;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:var(--cream)}
@@ -192,6 +187,50 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 .vclose{position:absolute;top:max(14px,env(safe-area-inset-top));right:16px;width:44px;height:44px;border-radius:12px;background:var(--cream);color:var(--on-cream);
   font-size:28px;font-weight:700;line-height:1;box-shadow:0 4px 0 var(--cream-edge)}
 @keyframes shake{20%{transform:translate(-3px,1px) rotate(-.4deg)}40%{transform:translate(3px,-1px) rotate(.4deg)}60%{transform:translate(-2px,1px)}80%{transform:translate(2px,0)}}
+/* ===== editorial style layer — kept in its own commit so it can be reverted to the original look ===== */
+:root{--serif:"Fraunces",Georgia,serif;--sans:"Archivo","Helvetica Neue",Arial,sans-serif;--hard:#041A11}
+body{font-family:var(--sans)}
+.label{font-weight:700;font-size:13px;letter-spacing:.22em;display:flex;align-items:center;gap:10px}
+.label::before,.label::after{content:"";width:22px;height:1px;background:currentColor;opacity:.5}
+.pill{font-weight:800;font-size:26px;border-radius:8px;padding:6px 22px 5px;box-shadow:4px 4px 0 var(--hard)}
+.sq{width:48px;height:48px;border-radius:50%;box-shadow:3px 3px 0 var(--hard);font-family:var(--serif);font-weight:800;font-size:24px}
+.press:active,.press.down{transform:translate(3px,3px)!important;box-shadow:0 0 0 var(--hard)!important}
+.btn-dark{font-weight:800;font-size:21px;letter-spacing:.14em;border-radius:999px;height:58px;padding:0 38px;box-shadow:4px 5px 0 var(--hard)}
+.btn-dark:active,.btn-dark.down{transform:translate(4px,5px);box-shadow:0 0 0 var(--hard)}
+.btn-cream{font-weight:700;font-size:14px;letter-spacing:.12em;border-radius:999px;box-shadow:3px 3px 0 var(--hard)}
+.peek{height:42px}
+.hint{font-family:var(--serif);font-weight:700;font-size:31px;line-height:1.05;text-transform:none;letter-spacing:-.01em;max-width:320px}
+.hint.small{font-size:21px;font-weight:600}
+.hint .tag{font-family:var(--sans);font-weight:800}
+.sub{font-weight:600;font-size:12px;letter-spacing:.14em}
+.slot{border-radius:calc(var(--sr)*.6)}
+.piece,.piece.done{filter:drop-shadow(3px 3px 0 var(--hard)) drop-shadow(0 8px 10px rgba(0,0,0,.22))}
+.piece.lift{filter:drop-shadow(6px 8px 0 rgba(4,26,17,.55)) drop-shadow(0 18px 18px rgba(0,0,0,.3))}
+.whole{filter:drop-shadow(4px 4px 0 var(--hard)) drop-shadow(0 12px 14px rgba(0,0,0,.25))}
+.float{font-family:var(--serif);font-weight:800;font-style:italic;text-transform:none;font-size:27px}
+.stamp{font-weight:800}
+.you{border-radius:12px;box-shadow:5px 5px 0 var(--hard)}
+.you .v{font-weight:800}
+.you .k{font-weight:700}
+.section{font-family:var(--serif);font-weight:700;font-size:23px;letter-spacing:0;text-transform:none}
+.section span{font-family:var(--sans);letter-spacing:.1em;text-transform:uppercase;font-size:12px}
+.row,.row.me{border-radius:10px;box-shadow:3px 3px 0 var(--hard);font-weight:600;font-size:16px}
+.streak{font-weight:700;font-size:13px;letter-spacing:.14em}
+.sheet h2{font-family:var(--serif);text-transform:none;font-size:32px}
+.sheet p{font-family:var(--sans)}
+.toast,.vclose{box-shadow:3px 3px 0 var(--hard)}
+.vclose{border-radius:50%;font-family:var(--serif)}
+/* "Extra!" special edition clipping (replaces WELL DONE) */
+.extra{width:min(86vw,360px);background:var(--cream);color:var(--on-cream);border-radius:6px;padding:16px 20px 18px;box-shadow:6px 7px 0 var(--hard);transform:rotate(-1.5deg);text-align:left}
+.veil.on .extra{animation:extraIn .6s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes extraIn{from{transform:translateY(-40px) rotate(-12deg) scale(.7);opacity:0}}
+.ex-mast{display:flex;justify-content:space-between;align-items:baseline;border-bottom:4px double var(--on-cream);padding-bottom:6px}
+.ex-mast b{font-family:var(--serif);font-weight:800;font-style:italic;font-size:42px;line-height:1;color:#9C6158}
+.ex-mast span{font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.75}
+.ex-head{font-family:var(--serif);font-weight:800;font-size:30px;line-height:1.04;letter-spacing:-.01em;margin:12px 0}
+.ex-head b{color:#9C6158;white-space:nowrap;font-family:var(--sans);font-weight:800}
+.ex-sub{border-top:1px solid rgba(10,51,35,.35);padding-top:9px;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#56693A}
+.ex-sub i{font-style:normal;color:#9C6158}
 </style>
 </head>
 <body>
@@ -216,12 +255,13 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;paddin
 
 <!-- well done -->
 <div class="veil" id="veil">
-  <div class="big">Well<br>done!</div>
-  <div class="time-big" id="wdTime">0:47.3</div>
-  <div class="rank-title" id="wdTitle"></div>
-  <div class="sub" id="wdPct"></div>
-  <button class="btn-dark" id="nextBtn" aria-label="See leaderboard" style="min-width:150px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M13 5l7 7-7 7"/></svg>
+  <div class="extra">
+    <div class="ex-mast"><b>Extra!</b><span id="exDate"></span></div>
+    <div class="ex-head">Reader rebuilds today's front page in <b id="wdTime">0:47.3</b></div>
+    <div class="ex-sub"><i id="wdTitle"></i> · <span id="wdPct"></span></div>
+  </div>
+  <button class="btn-dark" id="nextBtn">LEADERBOARD
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M4 12h16M13 5l7 7-7 7"/></svg>
   </button>
 </div>
 
@@ -541,7 +581,7 @@ function win(){
   const pct=Math.max(1,Math.min(99,Math.round((1-rankFor(finalMs)/TOTAL)*100)));$('wdTitle').textContent=titleFor(rankFor(finalMs));
   setTimeout(()=>stopThePress(fmt(finalMs,true)),800);
   setTimeout(()=>{$('wdTime').textContent=fmt(finalMs,true);$('wdPct').textContent=`Faster than ${pct}% of readers`;$('veil').classList.add('on');
-    if(pressEl)pressEl.style.opacity=.28},2900);
+    if(pressEl)pressEl.style.opacity=0},2900);
 }
 /* the awe moment: the finished front page spins in like an old movie, then gets stamped */
 let pressEl=null;
@@ -622,22 +662,22 @@ const loadImg=src=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);
 /* 4:5 share image: the stamped front page + your time, rank and newsroom title */
 async function shareCard(){
   const {ms,rank,sk,ttl}=shareInfo,W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
-  await Promise.all(['700 64px Oswald','600 30px Oswald'].map(f=>document.fonts.load(f).catch(()=>{})));
+  await Promise.all(['800 64px Fraunces','800 56px Fraunces','700 30px Archivo','800 88px Archivo'].map(f=>document.fonts.load(f).catch(()=>{})));
   const g=x.createRadialGradient(W/2,H*.45,0,W/2,H*.45,H*.8);g.addColorStop(0,'#0E4A3F');g.addColorStop(.55,'#0A3323');g.addColorStop(1,'#062419');x.fillStyle=g;x.fillRect(0,0,W,H);
   try{const k=await loadImg(getComputedStyle(document.documentElement).getPropertyValue('--kilim').trim().slice(5,-2));
     x.save();x.globalAlpha=.05;x.fillStyle=x.createPattern(k,'repeat');x.fillRect(0,0,W,H);x.restore()}catch(e){}
-  x.textAlign='center';x.fillStyle='#F7F4D5';x.font='700 66px Oswald';x.fillText('FRONT PAGE PUZZLE',W/2,112);
-  x.fillStyle='#839958';x.font='600 32px Oswald';x.fillText(ds.toUpperCase()+' · TODAY\'S EDITION',W/2,162);
+  x.textAlign='center';x.fillStyle='#F7F4D5';x.font='800 64px Fraunces';x.fillText('Front Page Puzzle',W/2,110);
+  x.fillStyle='#839958';x.font='700 28px Archivo';x.fillText(ds.toUpperCase()+' · TODAY\'S EDITION',W/2,162);
   const img=await loadImg(PAPER),pw=500,ph=750;
   x.save();x.translate(W/2,640);x.rotate(-4*Math.PI/180);x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=50;x.shadowOffsetY=24;
   x.fillStyle='#F7F4D5';x.beginPath();x.roundRect(-pw/2-10,-ph/2-10,pw+20,ph+20,18);x.fill();x.shadowColor='transparent';
   x.save();x.beginPath();x.roundRect(-pw/2,-ph/2,pw,ph,10);x.clip();x.drawImage(img,-pw/2,-ph/2,pw,ph);x.restore();
   x.translate(0,110);x.rotate(-10*Math.PI/180);x.fillStyle='rgba(247,244,213,.94)';x.strokeStyle='#9C6158';x.lineWidth=8;
   x.beginPath();x.roundRect(-210,-80,420,160,18);x.fill();x.stroke();
-  x.fillStyle='#9C6158';x.font='600 30px Oswald';x.fillText('S O L V E D   I N',0,-28);x.font='700 92px Oswald';x.fillText(fmt(ms,true),0,58);x.restore();
-  x.fillStyle='#D3968C';x.font='700 54px Oswald';x.fillText(ttl.toUpperCase(),W/2,1112);
-  x.fillStyle='#F7F4D5';x.font='600 40px Oswald';x.fillText(`#${rank.toLocaleString('en-IN')} OF ${TOTAL.toLocaleString('en-IN')} READERS`+(sk>1?` · 🔥 ${sk}`:''),W/2,1172);
-  x.fillStyle='#839958';x.font='600 34px Oswald';x.fillText(location.protocol.startsWith('http')&&!/^(127\.|localhost)/.test(location.host)?'CAN YOU BEAT ME?  '+location.host+location.pathname:'CAN YOU BEAT ME?',W/2,1250);
+  x.fillStyle='#9C6158';x.font='700 26px Archivo';x.fillText('S O L V E D   I N',0,-30);x.font='800 84px Archivo';x.fillText(fmt(ms,true),0,58);x.restore();
+  x.fillStyle='#D3968C';x.font='800 56px Fraunces';x.fillText(ttl,W/2,1112);
+  x.fillStyle='#F7F4D5';x.font='700 34px Archivo';x.fillText(`#${rank.toLocaleString('en-IN')} OF ${TOTAL.toLocaleString('en-IN')} READERS`+(sk>1?` · 🔥 ${sk}`:''),W/2,1172);
+  x.fillStyle='#839958';x.font='700 30px Archivo';x.fillText(location.protocol.startsWith('http')&&!/^(127\.|localhost)/.test(location.host)?'CAN YOU BEAT ME?  '+location.host+location.pathname:'CAN YOU BEAT ME?',W/2,1250);
   return new Promise(ok=>c.toBlob(ok,'image/png'))}
 $('shareBtn').addEventListener('click',async()=>{
   let file=null;try{file=new File([await shareCard()],'front-page-puzzle.png',{type:'image/png'})}catch(e){}
@@ -660,7 +700,8 @@ $('subBtn').addEventListener('click',()=>{sfx.tap();if(EDITION.subscribeUrl&&EDI
 $('resetBtn').addEventListener('click',()=>{try{localStorage.removeItem(todayKey)}catch(e){}location.reload()});
 
 const d=new Date(),ds=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-$('dateLabel').textContent=ds;$('dateLabel2').textContent=ds;
+$('dateLabel').textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}).replace(',','');
+$('exDate').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short',year:'numeric'}).replace(',','');$('dateLabel2').textContent=ds;
 setInterval(countdown,1000);countdown();
 // live readers ticker
 let done=Math.round(TOTAL*.31);setInterval(()=>{if(state!=='play'||!$('doneCount'))return;done+=Math.floor(Math.random()*3);$('doneCount').textContent=done.toLocaleString('en-IN')},1100);
